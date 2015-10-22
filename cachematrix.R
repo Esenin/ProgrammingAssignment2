@@ -1,15 +1,74 @@
-## Put comments here that give an overall description of what your
-## functions do
+# @file cachematrix.R 
+# @brief contains the functions that add caching functionality to matrices
 
-## Write a short comment describing this function
 
-makeCacheMatrix <- function(x = matrix()) {
-
+# @brief creates vector which encapsulates working with matrix and its inverse
+# @arg m raw matrix for constructor
+# @returns $set() - matrix "setter", $get() - matrix getter
+# $setInverseM() - setter for inversed matrix
+# $getInverseM() - getter for inversed matrix
+makeCacheMatrix <- function(m = matrix()) {
+    mInvMatrix <- NULL
+    set <- function(y) {
+        m <<- y
+        mInvMatrix <<- NULL
+    }
+    get <- function() {
+        m
+    }
+    setInverseM <- function(inversed) {
+        mInvMatrix <<- inversed
+    }
+    getInverseM <- function() {
+        mInvMatrix
+    }
+    list(set = set
+         , get = get
+         , setInverseM = setInverseM
+         , getInverseM = getInverseM)
 }
 
 
-## Write a short comment describing this function
+# @brief computing the inverse of a square matrix 
+# @arg x square matrix
+# @return raw inverse
+# @throws exception if the determinant of a matrix equals to zero
+cacheSolve <- function(x) {
+    invM <- x$getInverseM()
+    if(!is.null(invM)) {
+        message("info: using cached value")
+        return(invM)
+    }
 
-cacheSolve <- function(x, ...) {
-        ## Return a matrix that is the inverse of 'x'
+    message("computing the inverse")
+    
+    matrix_ <- x$get()
+    
+    dimension <- dim(matrix_)
+    if (dimension[[1]] != dimension[[2]]) {
+        stop("Matrix must be square by requirements")
+    }
+    
+    # assignment says: "assume that the matrix supplied is always invertible."
+    invM <- solve(matrix_) # so we don't check correctness of the result
+    
+    x$setInverseM(invM)
+    invM
 }
+
+
+test <- function() {
+    m <- makeCacheMatrix(matrix(rnorm(9), 3, 3))
+    cacheSolve(m)
+    cacheSolve(m)
+    m$set(matrix(rnorm(81), 9, 9))
+    cacheSolve(m)
+    invisible(cacheSolve(m))
+}
+
+# output messages:
+# 
+# computing the inverse
+# info: using cached value
+# computing the inverse
+# info: using cached value
